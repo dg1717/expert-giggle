@@ -1,49 +1,89 @@
+from datetime import datetime, timedelta
 from time import sleep
-
+from selenium import webdriver
 from selenium.webdriver.common.by import By
-
 from utilities.webdriver_extension import WebDriverExtension
 
 
 class HotelPage:
-
-    def __init__(self, driver, hotel_name):
-        self.driver = driver
-        self.extension = WebDriverExtension(driver)
-        self.enter_name_of_hotel(hotel_name)
-
-    hotel_name_input = (By.XPATH, "//input[contains(@placeholder,'Enter a city,')]")
-    date_selector = (By.XPATH, "//input[contains(@placeholder,'Enter a city,')]")
+    # Class variables
+    hotel_name_input = (By.CSS_SELECTOR, "[id=':re:']")
+    date_selector = (By.CSS_SELECTOR, "[data-testid='date-display-field-start']")
     special_next_button = (By.XPATH, "//div[@class='next-button']//button")
     increment_date_locator = (By.XPATH,
                               "(//div[@aria-label='Start date']"
                               "//span[@aria-label='Increment date by one day'])[2]")
-    search_button_locator = (By.XPATH, "//button[@aria-label='Search']")
-    price_display = (By.XPATH,
-                     "(//div[@class='kzGk kzGk-mod-flexible-height'])[1]//div[@data-target='price']")
+    search_button_locator = (By.CSS_SELECTOR, "button[type='submit']")
+    clear_search = (By.CSS_SELECTOR, "[data-testid='input-clear']")
+    price_display = (By.CSS_SELECTOR, "[data-testid='price-and-discounted-price']")
+    day_unavailable_message = (By.XPATH, "//p[contains(text(),'This property has no availability')]")
+    hotel_name_locator = (By.XPATH, "(//body[@id='b2searchresultsPage']//div[@data-testid='title'])[1]")
 
-    def set_date(self, date):
-        self.extension.find_and_send_keys(self.date_selector, date)
+    def __init__(self, driver, hotel_name):
+        self.driver = driver
+        self.hotel_name = hotel_name
+        # Instance variables
+        self.hotel_result = (By.XPATH, f"(//div[contains(text(),'{self.hotel_name}')]/ancestor::div[@role='button'])[1]")
+        self.extension = WebDriverExtension(driver)
+        self.enter_name_of_hotel(hotel_name)
 
     def get_price_for_date(self):
         price_element_text = self.extension.get_element_text(self.price_display)
-
-        # Assuming the price is displayed as '$100' or '100 USD', we need to extract only the numeric value
         price = ''.join(filter(str.isdigit, price_element_text))
-        return float(price) / 100  # converting cents to dollar format
+        return float(price)
 
     def enter_name_of_hotel(self, hotel):
         self.extension.find_and_send_keys(self.hotel_name_input, hotel)
+        self.extension.find_and_click(self.hotel_result)
+        current_date = self.get_current_date_locator()
+        self.extension.find_and_click(current_date)
         self.extension.find_and_click(self.search_button_locator)
+        self.get_price_for_date()
 
-    def go_to_next_date(self):
-        # Click to increment the date
-        self.extension.find_and_click(self.increment_date_locator)
+    @staticmethod
+    def get_date_locator(date):
+        # Format the given date in the required 'YYYY-MM-DD' format
+        date_str = date.strftime('%Y-%m-%d')
+
+        # Return the locator for the given date as a tuple
+        return By.CSS_SELECTOR, f"[data-date='{date_str}']"
+
+    @staticmethod
+    def get_current_date_locator():
+        # Get the current date
+        current_date = datetime.now()
+
+        # Format the current date in the required 'YYYY-MM-DD' format
+        current_date_str = current_date.strftime('%Y-%m-%d')
+
+        # Return the locator for the current date as a tuple
+        return By.CSS_SELECTOR, f"[data-date='{current_date_str}']"
+
+    def go_to_next_date(self, current_date, hotel):
+        self.extension.find_and_click(self.clear_search)
+        self.extension.find_and_send_keys(self.hotel_name_input, hotel)
+        self.extension.find_and_click(self.hotel_result)
+        # Click the calendar picker
+        self.extension.find_and_click(self.date_selector)
+
+        # Click the current date in the calendar picker
+        current_date_locator = self.get_date_locator(current_date)
+        self.extension.find_and_click(current_date_locator)
 
         # Click the search button to get the results for the incremented date
         self.extension.find_and_click(self.search_button_locator)
 
-        # Wait for site to load
+        # Wait for the site to load
         sleep(5)
+
+        # Check if the hotel name matches
+        hotel_name_text = self.extension.get_element_text(self.hotel_name_locator)
+
+        if hotel_name_text is None or hotel.lower() not in hotel_name_text.lower():
+            print(
+                f"Hotel name '{hotel}' not found for date {current_date.strftime('%Y-%m-%d')}. Moving to the next date.")
+            return False
+
+        return True
 
 

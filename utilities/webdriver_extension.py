@@ -59,21 +59,14 @@ class WebDriverExtension:
             retries -= 1
             sleep(1)  # wait for a second before retrying
 
-    def wait_for_text_to_be_present(self, locator, text, timeout=30):
-        """
-                Waits for the specified text to be present in the given element.
-
-                :param self:
-                :param locator: tuple (By.<type>, <value>) specifying the element's location strategy.
-                :param text: The text to wait for.
-                :param timeout: How long to wait for the condition. Defaults to 30 seconds.
-                """
+    def wait_for_text_to_be_present(self, locator, text, timeout=2):
         try:
             element_present = EC.text_to_be_present_in_element(locator, text)
             WebDriverWait(self.driver, timeout).until(element_present)
+            return True
         except TimeoutException:
-            print(f"Timed out waiting for {locator} to have text: {text}")
-            raise
+            print(f"Timed out waiting for {locator} to have text: '{text}'")
+            return False
 
     def open_new_tab(self, url=None):
         self.driver.execute_script("window.open('', '_blank');")
