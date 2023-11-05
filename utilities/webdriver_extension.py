@@ -32,7 +32,6 @@ class WebDriverExtension:
                 sleep(1)  # wait for a second before retrying
 
     def find_and_click(self, locator, retries=3, wait_time=10):
-        """Method to find an element using the provided locator and click on it with error handling, JavaScript fallback, and retries."""
         while retries:
             try:
                 # Using WebDriverWait to ensure that the element is clickable before interacting with it.
@@ -48,16 +47,23 @@ class WebDriverExtension:
                 # If there's an obstruction, try scrolling the element into center view and then click
                 self.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", element)
                 sleep(1)  # Give a moment for any animations or changes to complete
-                element.click()  # Try to click again
+                try:
+                    element.click()  # Try to click again
+                except ElementClickInterceptedException:
+                    # Click with JavaScript as a fallback
+                    self.driver.execute_script("arguments[0].click();", element)
+                    return
 
             except (NoSuchElementException, ElementNotInteractableException):
-                if retries == 1:  # if it's the last retry
-                    raise
                 # Click with JavaScript as a fallback
                 self.driver.execute_script("arguments[0].click();", element)
+                return
 
             retries -= 1
-            sleep(1)  # wait for a second before retrying
+            sleep(1)  # wait for a short duration before the next retry
+
+        # If all retries have been exhausted, raise the exception.
+        raise Exception(f"Failed to click the element with locator: {locator}")
 
     def wait_for_text_to_be_present(self, locator, text, timeout=2):
         try:
@@ -119,8 +125,3 @@ class WebDriverExtension:
             "mobile": False
         }
         self.driver.execute_cdp_cmd("Emulation.setDeviceMetricsOverride", params)
-
-
-
-
-

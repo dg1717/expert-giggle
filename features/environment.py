@@ -3,7 +3,11 @@ from utilities.driver_setup import WebDriverFactory
 
 def before_scenario(context, scenario):
     # Initialize the WebDriver before each scenario
-    context.driver = WebDriverFactory.get_webdriver()
+    # Choose the method based on the value of isRemote
+    if WebDriverFactory.isRemote:
+        context.driver = WebDriverFactory.get_remote_webdriver()
+    else:
+        context.driver = WebDriverFactory.get_webdriver()
 
 
 def after_scenario(context, scenario):

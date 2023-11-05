@@ -1,29 +1,31 @@
+import os
+
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
-import os
 
 
 class WebDriverFactory:
+    isRemote = True
 
     @staticmethod
-    def get_webdriver(browser_name="chrome", local_run=False):
+    def get_webdriver(browser_name="chrome"):
         if browser_name == "chrome":
             options = webdriver.ChromeOptions()
-            options.add_argument("--headless")
-            options.add_argument("--no-sandbox")
-            options.add_argument("--disable-dev-shm-usage")
-            options.add_argument("--disable-gpu")
-            options.add_argument("--disable-extensions")
+            # Add any specific options for Chrome if required.
+            # options.add_argument('--headless')
+            return webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
 
-            if local_run:
-                # Local execution
-                return webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
-            else:
-                options.add_argument("--remote-debugging-port=9222")
-                return webdriver.Chrome(options=options)
+    @staticmethod
+    def get_remote_webdriver(browser_name="chrome"):
 
-
-# Usage:
-local_run = os.getenv('LOCAL_RUN', 'False').lower() in ('true', '1', 't')
-driver = WebDriverFactory.get_webdriver(local_run=local_run)
+        if browser_name == "chrome":
+            options = webdriver.ChromeOptions()
+            # Add any specific options for Chrome if required.
+            # If running in GitHub Actions (or any remote environment), run headless
+            if WebDriverFactory.isRemote:
+                options.add_argument('--headless')
+                options.add_argument('--disable-gpu')
+                options.add_argument('--no-sandbox')
+            # Setup ChromeDriver
+            return webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
