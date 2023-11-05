@@ -2,11 +2,8 @@ import asyncio
 import json
 
 import aiohttp
-import discord
 from behave import *
-from discord.webhook.async_ import AsyncWebhookAdapter, Webhook
-from selenium import webdriver
-from pages.HotelPage import HotelPage
+from pages.hotel_page import HotelPage
 from datetime import datetime, timedelta
 
 from utilities.webdriver_extension import WebDriverExtension
