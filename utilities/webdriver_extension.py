@@ -99,7 +99,6 @@ class WebDriverExtension:
             return element.text
         except TimeoutException:
             # If the wait times out, take a screenshot and print the page source
-            self.driver.save_screenshot('screenshot.png')
             print(self.driver.page_source)
             # Then raise an exception indicating the element could not be found
             raise NoSuchElementException(f"Element with locator {locator} not found after {wait_time} seconds")
