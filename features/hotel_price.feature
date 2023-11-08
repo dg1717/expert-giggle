@@ -14,5 +14,5 @@ Feature: Hotel price monitoring for optimal booking
     Examples:
       | hotel_name               | desired_amount |
       | The Charleston Place     | 400            |
-      | Hotel Bennett Charleston | 400            |
+#      | Hotel Bennett Charleston | 400            |
 

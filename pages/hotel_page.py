@@ -2,7 +2,14 @@ from datetime import datetime, timedelta
 from time import sleep
 from selenium import webdriver
 from selenium.webdriver.common.by import By
+from selenium.webdriver.support.wait import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+
 from utilities.webdriver_extension import WebDriverExtension
+
+
+def get_hotel_result_locator(hotel_name):
+    return By.XPATH, f"(//div[contains(text(),'{hotel_name}')]/ancestor::div[@role='button'])[1]"
 
 
 class HotelPage:
@@ -23,7 +30,6 @@ class HotelPage:
         self.driver = driver
         self.hotel_name = hotel_name
         # Instance variables
-        self.hotel_result = (By.XPATH, f"(//div[contains(text(),'{self.hotel_name}')]/ancestor::div[@role='button'])[1]")
         self.extension = WebDriverExtension(driver)
         self.enter_name_of_hotel(hotel_name)
 
@@ -34,10 +40,16 @@ class HotelPage:
 
     def enter_name_of_hotel(self, hotel):
         self.extension.find_and_send_keys(self.hotel_name_input, hotel)
-        self.extension.find_and_click(self.hotel_result)
+        self.extension.find_and_click(get_hotel_result_locator(hotel))
         current_date = self.get_current_date_locator()
         self.extension.find_and_click(current_date)
+        next_date = self.get_next_date_locator()
+        self.extension.find_and_click(next_date)
+        self.driver.save_screenshot('1_before_clicking_search.png')
         self.extension.find_and_click(self.search_button_locator)
+        element = self.driver.find_element(*self.search_button_locator)
+        element.click()
+        self.driver.save_screenshot('2_after_clicking_search.png')
         self.get_price_for_date()
 
     @staticmethod
@@ -59,10 +71,24 @@ class HotelPage:
         # Return the locator for the current date as a tuple
         return By.CSS_SELECTOR, f"[data-date='{current_date_str}']"
 
+    @staticmethod
+    def get_next_date_locator():
+        # Get the current date
+        current_date = datetime.now()
+
+        # Add one day to the current date to get the next date
+        next_date = current_date + timedelta(days=1)
+
+        # Format the next date in the required 'YYYY-MM-DD' format
+        next_date_str = next_date.strftime('%Y-%m-%d')
+
+        # Return the locator for the next date as a tuple
+        return By.CSS_SELECTOR, f"[data-date='{next_date_str}']"
+
     def go_to_next_date(self, current_date, hotel):
         self.extension.find_and_click(self.clear_search)
         self.extension.find_and_send_keys(self.hotel_name_input, hotel)
-        self.extension.find_and_click(self.hotel_result)
+        self.extension.find_and_click(get_hotel_result_locator(hotel))
         # Click the calendar picker
         self.extension.find_and_click(self.date_selector)
 
@@ -85,5 +111,3 @@ class HotelPage:
             return False
 
         return True
-
-

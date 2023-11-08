@@ -1,11 +1,12 @@
 from time import sleep
 
 from selenium.common import NoSuchElementException, ElementNotInteractableException, TimeoutException, \
-    ElementClickInterceptedException
+    ElementClickInterceptedException, WebDriverException
 from selenium.webdriver import Keys
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
+import logging
 
 
 class WebDriverExtension:
@@ -34,7 +35,6 @@ class WebDriverExtension:
     def find_and_click(self, locator, retries=3, wait_time=10):
         while retries:
             try:
-                # Using WebDriverWait to ensure that the element is clickable before interacting with it.
                 element = WebDriverWait(self.driver, wait_time).until(
                     EC.element_to_be_clickable(locator)
                 )
@@ -44,15 +44,20 @@ class WebDriverExtension:
                 return
 
             except ElementClickInterceptedException:
-                # If there's an obstruction, try scrolling the element into center view and then click
+                logging.exception("ElementClickInterceptedException caught, trying to scroll and click.")
                 self.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", element)
-                sleep(1)  # Give a moment for any animations or changes to complete
+                sleep(1)
                 try:
-                    element.click()  # Try to click again
+                    element.click()
                 except ElementClickInterceptedException:
-                    # Click with JavaScript as a fallback
+                    logging.exception("ElementClickInterceptedException caught again, trying JavaScript click.")
                     self.driver.execute_script("arguments[0].click();", element)
                     return
+            except WebDriverException as e:
+                logging.exception(f"WebDriverException caught: {e}. Retrying...")
+                retries -= 1
+                if retries == 0:
+                    raise
 
             except (NoSuchElementException, ElementNotInteractableException):
                 # Click with JavaScript as a fallback
@@ -84,14 +89,20 @@ class WebDriverExtension:
         if url:
             self.driver.get(url)
 
-    def get_element_text(self, locator, retries=3):
-        while retries:
-            try:
-                element = self.driver.find_element(*locator)
-                return element.text
-            except (NoSuchElementException, ElementNotInteractableException):
-                if retries == 1:  # if it's the last retry
-                    raise
+    def get_element_text(self, locator, wait_time=10):
+        try:
+            # Wait until the element is present and visible
+            WebDriverWait(self.driver, wait_time).until(
+                EC.visibility_of_element_located(locator)
+            )
+            element = self.driver.find_element(*locator)
+            return element.text
+        except TimeoutException:
+            # If the wait times out, take a screenshot and print the page source
+            self.driver.save_screenshot('screenshot.png')
+            print(self.driver.page_source)
+            # Then raise an exception indicating the element could not be found
+            raise NoSuchElementException(f"Element with locator {locator} not found after {wait_time} seconds")
 
     def switch_to_previous_tab(self):
         """Switch to the other tab (assuming there are only two)."""
