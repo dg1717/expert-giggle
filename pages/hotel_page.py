@@ -47,7 +47,7 @@ class HotelPage:
         self.extension.find_and_click(next_date)
         self.extension.find_and_click(self.search_button_locator)
         element = self.driver.find_element(*self.search_button_locator)
-        element.click()
+        self.extension.find_and_click(element)
         self.get_price_for_date()
 
     @staticmethod
