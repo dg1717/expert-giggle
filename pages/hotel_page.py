@@ -1,7 +1,10 @@
-from datetime import datetime, timedelta
+import asyncio
+from datetime import datetime, timedelta, time
 from time import sleep
-from selenium import webdriver
+
+from selenium.common import NoSuchElementException, TimeoutException
 from selenium.webdriver.common.by import By
+from selenium.webdriver import ActionChains
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
@@ -16,18 +19,17 @@ class HotelPage:
     # Class variables
     hotel_name_input = (By.CSS_SELECTOR, "[id=':re:']")
     date_selector = (By.CSS_SELECTOR, "[data-testid='date-display-field-start']")
-    special_next_button = (By.XPATH, "//div[@class='next-button']//button")
-    increment_date_locator = (By.XPATH,
-                              "(//div[@aria-label='Start date']"
-                              "//span[@aria-label='Increment date by one day'])[2]")
     search_button_locator = (By.CSS_SELECTOR, "button[type='submit']")
     clear_search = (By.CSS_SELECTOR, "[data-testid='input-clear']")
+    close_google_popup_button = (By.CSS_SELECTOR, "[id='close']")
     price_display = (By.CSS_SELECTOR, "[data-testid='price-and-discounted-price']")
+    close_sign_in_button = (By.CSS_SELECTOR, "[aria-label='Dismiss sign-in info.']")
     day_unavailable_message = (By.XPATH, "//p[contains(text(),'This property has no availability')]")
     hotel_name_locator = (By.XPATH, "(//body[@id='b2searchresultsPage']//div[@data-testid='title'])[1]")
 
     def __init__(self, driver, hotel_name):
         self.driver = driver
+        actions = ActionChains(self.driver)
         self.hotel_name = hotel_name
         # Instance variables
         self.extension = WebDriverExtension(driver)
@@ -39,6 +41,10 @@ class HotelPage:
         return float(price)
 
     def enter_name_of_hotel(self, hotel):
+        print(type(self.driver.name))
+        self.close_sign_in()
+        if self.driver.name.lower() not in ['chrome', 'msedge']:
+            self.close_google_popup()
         self.extension.find_and_send_keys(self.hotel_name_input, hotel)
         self.extension.find_and_click(get_hotel_result_locator(hotel))
         current_date = self.get_current_date_locator()
@@ -49,6 +55,30 @@ class HotelPage:
         element = self.driver.find_element(*self.search_button_locator)
         self.extension.find_and_click(element)
         self.get_price_for_date()
+
+    def close_google_popup(self):
+        iframe_locator = (By.CSS_SELECTOR, "[title='Sign in with Google Dialog']")
+        iframe = WebDriverWait(self.driver, 10).until(EC.presence_of_element_located(iframe_locator))
+
+        # Switch to the iframe
+        self.driver.switch_to.frame(iframe)
+        self.extension.click_with_js(self.close_google_popup_button)
+        self.driver.switch_to.default_content()
+
+    def close_sign_in(self):
+        try:
+            # Add a sleep for 3 seconds
+            sleep(3)
+
+            # Check if the close button element is present
+            close_button = self.driver.find_element(By.CSS_SELECTOR, "[aria-label='Dismiss sign-in info.']")
+
+            # If the element is present, execute the script
+            close_button_script = "document.querySelector(\"[aria-label='Dismiss sign-in info.']\").click();"
+            self.driver.execute_script(close_button_script)
+        except NoSuchElementException:
+            # Handle the case when the element is not present
+            print("Close button not found. Skipping script execution or adding alternative logic.")
 
     @staticmethod
     def get_date_locator(date):
@@ -84,21 +114,24 @@ class HotelPage:
         return By.CSS_SELECTOR, f"[data-date='{next_date_str}']"
 
     def go_to_next_date(self, current_date, hotel):
-        self.extension.find_and_click(self.clear_search)
+        self.extension.click_with_js(self.clear_search)
         self.extension.find_and_send_keys(self.hotel_name_input, hotel)
-        self.extension.find_and_click(get_hotel_result_locator(hotel))
+        self.extension.click_with_js(get_hotel_result_locator(hotel))
         # Click the calendar picker
-        self.extension.find_and_click(self.date_selector)
+        self.extension.click_with_js(self.date_selector)
 
-        # Click the current date in the calendar picker
+        # Select the check-in/checkout dates the calendar picker
         current_date_locator = self.get_date_locator(current_date)
+        checkout_date = current_date + timedelta(days=1)
+        checkout_date_locator = self.get_date_locator(checkout_date)
         self.extension.find_and_click(current_date_locator)
+        self.extension.find_and_click(checkout_date_locator)
 
         # Click the search button to get the results for the incremented date
         self.extension.find_and_click(self.search_button_locator)
 
         # Wait for the site to load
-        sleep(5)
+        sleep(4)
 
         # Check if the hotel name matches
         hotel_name_text = self.extension.get_element_text(self.hotel_name_locator)

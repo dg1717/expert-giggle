@@ -5,14 +5,14 @@ Feature: Hotel price monitoring for optimal booking
   So that I can book the hotel at the optimal price
 
   @hotel
-  Scenario: Identify the date with the lowest price for The Charleston Place in a month
-    Given I am monitoring the price of the hotel per night for "The Charleston Place" for the next 30 days
+  Scenario Outline: Identify the date with the lowest price for The Charleston Place in a month
+    Given I am monitoring the price of the hotel per night for "<hotel_name>" for the next 30 days
     When I analyze the prices for each day
     Then I should identify the date with the lowest price
-    And notify me if that price is below "400"
+    And notify me if that price is below "<desired_amount>"
 
-#    Examples:
-#      | hotel_name               | desired_amount |
-#      | The Charleston Place     | 400            |
-#      | Hotel Bennett Charleston | 400            |
+    Examples:
+      | hotel_name           | desired_amount |
+      | The Charleston Place | 400            |
+      #| French Quarter Inn   | 400            |
 
