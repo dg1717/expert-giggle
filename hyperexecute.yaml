@@ -10,7 +10,7 @@ autosplit: true
 retryOnFailure: true
 
 maxRetries: 1
-concurrency: 2
+concurrency: 1
 
 env:
 #  PAT: ${{ .secrets.testKey }}
@@ -32,6 +32,12 @@ uploadArtefacts:
   - name: TestReports
     path:
     - reports/**
+
+report: true
+partialReports:
+    type: json
+    location: /
+    frameworkName: extent
 
 # Details about HTML Formatter at https://pypi.org/project/behave-html-formatter/
 testDiscovery:

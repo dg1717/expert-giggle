@@ -6,3 +6,4 @@ hyperexecute.exe
 artifacts
 artifacts-old
 logs
+venv/
