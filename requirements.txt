@@ -8,7 +8,7 @@ charset-normalizer>=3.3.1
 decorator>=5.1.1
 discord.py
 exceptiongroup>=1.1.3
-frozenlist>=1.4.0
+frozenlist
 h11>=0.14.0
 idna>=3.4
 multidict>=6.0.4
@@ -17,16 +17,16 @@ packaging>=23.2
 parse>=1.19.1
 parse-type>=0.6.2
 PySocks>=1.7.1
-python-dotenv>=1.0.0
+python-dotenv
 requests>=2.31.0
 secure-smtplib>=0.1.1
-selenium>=4.14.0
+selenium
 six>=1.16.0
 sniffio>=1.3.0
 sortedcontainers>=2.4.0
 trio>=0.22.2
 trio-websocket>=0.11.1
-typing_extensions>=4.8.0
+typing_extensions
 urllib3>=2.0.7
 webdriver-manager>=4.0.1
 wsproto>=1.2.0
@@ -43,6 +43,5 @@ Jinja2>=3.1.2
 click>=8.1.7
 Brotli>=1.1.0
 safari
-setuptools>=68.2.0
-locust>=2.18.3
-Appium-Python-Client
+setuptools
+locust
