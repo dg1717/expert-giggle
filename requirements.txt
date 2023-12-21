@@ -31,10 +31,10 @@ urllib3>=2.0.7
 webdriver-manager>=4.0.1
 wsproto>=1.2.0
 yarl>=1.9.2
-ConfigParser~=6.0.0
+ConfigParser
 flake8
 autopep8
-behave~=1.2.6
+behave
 behave-html-formatter
 
 pip>=23.3.1
@@ -42,7 +42,7 @@ wheel>=0.41.2
 Jinja2>=3.1.2
 click>=8.1.7
 Brotli>=1.1.0
-safari>=1.2.0
+safari
 setuptools>=68.2.0
 locust>=2.18.3
-Appium-Python-Client~=3.1.0
+Appium-Python-Client
