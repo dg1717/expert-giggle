@@ -13,14 +13,15 @@ maxRetries: 1
 concurrency: 1
 
 env:
-#  PAT: ${{ .secrets.testKey }}
  TARGET_OS: Windows 10
+ PAT: ${{ .secrets.testKey }}
+
 
 cacheKey: '{{ checksum "requirements.txt" }}'
 cacheDirectories:
   - pip_cache
 pre:
-  - pip3 install -r requirements.txt --cache-dir pip_cache
+  - pip install -r requirements.txt --cache-dir pip_cache
 post:
   - cat yaml/win/behave_hyperexecute_autosplit_sample.yaml
 upload:

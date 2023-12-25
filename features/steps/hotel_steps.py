@@ -24,7 +24,7 @@ def step_impl(context, hotel_name):
 def step_impl(context):
     # Starting from tomorrow, up to 30 days in the future
     start_date = datetime.now() + timedelta(days=30)
-    end_date = start_date + timedelta(days=30)
+    end_date = start_date + timedelta(days=7)
 
     context.min_price = float("inf")
     context.min_price_date = None
